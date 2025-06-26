@@ -1,9 +1,15 @@
-#!/usr/bin/env python3
+from server.app import create_app
 
-def pytest_itemcollected(item):
-    par = item.parent.obj
-    node = item.obj
-    pref = par.__doc__.strip() if par.__doc__ else par.__class__.__name__
-    suf = node.__doc__.strip() if node.__doc__ else node.__name__
-    if pref or suf:
-        item._nodeid = ' '.join((pref, suf))
+@pytest.fixture(scope="module") # type: ignore
+def app():
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"
+    })
+
+    with app.app_context():
+        db.create_all() # type: ignore
+        yield app
+        db.session.remove() # type: ignore
+        db.drop_all() # type: ignore
