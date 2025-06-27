@@ -1,33 +1,18 @@
-from flask import request, jsonify, Blueprint
-from server.models import db, User
+from flask import Blueprint, jsonify
+from .models import Recipe
 
-bp = Blueprint('api', __name__)
+main = Blueprint('main', __name__)
 
-@bp.route('/signup', methods=['POST'])
-def signup():
-    data = request.get_json()
-    
-    username = data.get('username')
-    password = data.get('password')
-    bio = data.get('bio')
-    image_url = data.get('image_url')
+@main.route('/')
+def index():
+    return jsonify({"message": "API is working!"})
 
-    if not username or not password:
-        return jsonify({'error': 'Username and password required'}), 422
-
-    user = User(
-        username=username,
-        password=password,
-        bio=bio,
-        image_url=image_url
-    )
-
-    db.session.add(user)
-    db.session.commit()
-
-    return jsonify({
-        'id': user.id,
-        'username': user.username,
-        'bio': user.bio,
-        'image_url': user.image_url
-    }), 201
+@main.route('/recipes')
+def get_recipes():
+    recipes = Recipe.query.all()
+    return jsonify([{
+        "id": r.id,
+        "name": r.name,
+        "instructions": r.instructions,
+        "minutes_to_complete": r.minutes_to_complete
+    } for r in recipes])
